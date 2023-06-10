@@ -21,7 +21,7 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://github.com/shadcn/ui",
+    github: "https://github.com/engrjeff/next-kanban-app",
     jeff: "https://jeffsegovia.dev",
   },
 }
