@@ -1,6 +1,7 @@
 import { Metadata, ResolvingMetadata } from "next"
 
-import TaskCard from "../components/TaskCard"
+import EditProjectButton from "../components/EditProjectButton"
+import TaskColumn from "../components/TaskColumn"
 import TaskForm from "../components/TaskForm"
 import { getProjectById } from "../services"
 
@@ -26,7 +27,10 @@ async function ProjectView({ params }: Props) {
   return (
     <div className="flex h-full flex-col" key={params.projectId}>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">{project.name}</h1>
+        <div className="flex gap-4">
+          <h1 className="text-2xl font-semibold">{project.name}</h1>
+          <EditProjectButton project={project} />
+        </div>
         <p className="text-muted-foreground">{project.description}</p>
       </div>
       <div className="flex flex-1 flex-col">
@@ -36,27 +40,13 @@ async function ProjectView({ params }: Props) {
         </div>
         <div className="flex flex-1 gap-6">
           {project.board.columns.map((column) => (
-            <div
+            <TaskColumn
               key={column.id}
-              className="min-w-[25%] flex-1 shrink-0 rounded-md bg-muted"
-            >
-              <div className="p-4">
-                <h3 className="text-xs font-semibold text-muted-foreground">
-                  {column.name}
-                </h3>
-              </div>
-              <div className="space-y-3 px-4">
-                {project.tasks
-                  .filter((task) => task.columnId === column.id)
-                  .map((taskItem) => (
-                    <TaskCard
-                      key={taskItem.id}
-                      task={taskItem}
-                      color={column.color}
-                    />
-                  ))}
-              </div>
-            </div>
+              column={column}
+              tasks={project.tasks.filter(
+                (task) => task.columnId === column.id
+              )}
+            />
           ))}
         </div>
       </div>

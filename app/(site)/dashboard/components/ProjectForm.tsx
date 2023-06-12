@@ -14,6 +14,7 @@ import {
 import { toast } from "react-toastify"
 
 import { cn } from "@/lib/utils"
+import useCurrentProject from "@/hooks/useCurrentProject"
 import useProjectFormToggle from "@/hooks/useProjectFormToggler"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,7 +39,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import ErrorMessage from "@/components/error-message"
 
-import { createProject } from "../services"
+import { createProject, updateProject } from "../services"
 import { ProjectCreateInput, projectCreateSchema } from "../services/schema"
 
 interface ProjectFormProps {
@@ -47,9 +48,23 @@ interface ProjectFormProps {
 
 function ProjectForm({ boards }: ProjectFormProps) {
   const projectFormState = useProjectFormToggle()
+  const { currentProject, setCurrentProject } = useCurrentProject()
+
+  const isEditing = currentProject !== null
+  const formTitle = isEditing ? "Edit Project" : "Create Project"
+
+  const handleOpenChange = (isOpen: boolean) => {
+    // make sure to set the current project to null
+    // on close
+    if (!isOpen) {
+      setCurrentProject(null)
+    }
+
+    projectFormState.toggle(isOpen)
+  }
 
   return (
-    <Dialog open={projectFormState.open} onOpenChange={projectFormState.toggle}>
+    <Dialog open={projectFormState.open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="secondary"
@@ -61,9 +76,9 @@ function ProjectForm({ boards }: ProjectFormProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
+          <DialogTitle>{formTitle}</DialogTitle>
           <DialogDescription>
-            Create a project by filling up the form below
+            Fill up the form below. Save the changes once done.
           </DialogDescription>
         </DialogHeader>
         <Form boards={boards} />
@@ -79,13 +94,16 @@ interface FormProps {
 const Form = ({ boards }: FormProps) => {
   const [isLoading, setIsLoading] = useState(false)
   const projectFormState = useProjectFormToggle()
+  const { currentProject, setCurrentProject } = useCurrentProject()
+
   const router = useRouter()
   const projectForm = useForm<ProjectCreateInput>({
     resolver: zodResolver(projectCreateSchema),
     mode: "onSubmit",
     defaultValues: {
-      name: "",
-      description: "",
+      boardId: currentProject?.boardId,
+      name: currentProject?.name ?? "",
+      description: currentProject?.description ?? "",
     },
   })
 
@@ -96,6 +114,8 @@ const Form = ({ boards }: FormProps) => {
     formState: { errors },
   } = projectForm
 
+  const isEditing = currentProject !== null
+
   const onError: SubmitErrorHandler<ProjectCreateInput> = (errors) => {
     console.log(errors)
   }
@@ -103,16 +123,19 @@ const Form = ({ boards }: FormProps) => {
   const onSubmit: SubmitHandler<ProjectCreateInput> = async (projectData) => {
     setIsLoading(true)
 
-    const createPromise = createProject(projectData)
+    const promise = isEditing
+      ? updateProject(currentProject.id, projectData)
+      : createProject(projectData)
 
     await toast
-      .promise(createPromise, {
+      .promise(promise, {
         pending: "Saving your project",
         success: "Project saved!",
         error: "An error has occured",
       })
       .finally(() => setIsLoading(false))
 
+    setCurrentProject(null)
     projectFormState.closeForm()
 
     // refresh

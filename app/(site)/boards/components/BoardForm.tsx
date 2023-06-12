@@ -15,6 +15,7 @@ import { toast } from "react-toastify"
 
 import { cn } from "@/lib/utils"
 import useBoardFormToggle from "@/hooks/useBoardFormToggler"
+import useCurrentBoard from "@/hooks/useCurrentBoard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,16 +41,25 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import ErrorMessage from "@/components/error-message"
 
-import { createBoard } from "../services"
+import { createBoard, updateBoard } from "../services"
 import { BoardCreateInput, boardCreateSchema } from "../services/schema"
 
 const MAX_COLUMNS = 4
 
-export default function CreateBoardForm() {
+export default function BoardForm() {
   const boardFormState = useBoardFormToggle()
+  const setCurrentBoard = useCurrentBoard((state) => state.setCurrentBoard)
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setCurrentBoard(null)
+    }
+
+    boardFormState.toggle(isOpen)
+  }
 
   return (
-    <Sheet open={boardFormState.open} onOpenChange={boardFormState.toggle}>
+    <Sheet open={boardFormState.open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button onClick={boardFormState.openForm}>
           <Plus className="mr-2 h-4 w-4" /> Create Board
@@ -69,15 +79,18 @@ export default function CreateBoardForm() {
 
 const Form = () => {
   const [isLoading, setIsLoading] = useState(false)
+
   const boardFormState = useBoardFormToggle()
-  const router = useRouter()
-  const boardForm = useForm<BoardCreateInput>({
-    resolver: zodResolver(boardCreateSchema),
-    mode: "onSubmit",
-    defaultValues: {
-      name: "",
-      description: "",
-      columns: [
+  const { currentBoard, setCurrentBoard } = useCurrentBoard()
+
+  const columns = currentBoard
+    ? currentBoard.columns.map((col) => ({
+        name: col.name,
+        order: col.order,
+        color: col.color,
+        id: col.id,
+      }))
+    : [
         {
           name: "",
           order: 1,
@@ -86,7 +99,16 @@ const Form = () => {
           name: "",
           order: 2,
         },
-      ],
+      ]
+
+  const router = useRouter()
+  const boardForm = useForm<BoardCreateInput>({
+    resolver: zodResolver(boardCreateSchema),
+    mode: "onSubmit",
+    defaultValues: {
+      name: currentBoard?.name ?? "",
+      description: currentBoard?.description ?? "",
+      columns: columns,
     },
   })
 
@@ -98,11 +120,15 @@ const Form = () => {
     formState: { errors },
   } = boardForm
 
+  const isEditing = currentBoard !== null
+  const formTitle = isEditing ? "Edit Board" : "Create Board"
+
   const nextOrder = watch("columns").length + 1
   const hasReachedMaxColumns = nextOrder === MAX_COLUMNS + 1
 
-  const columns = useFieldArray({
+  const { append, remove, fields } = useFieldArray({
     control,
+
     name: "columns",
   })
 
@@ -113,10 +139,12 @@ const Form = () => {
   const onSubmit: SubmitHandler<BoardCreateInput> = async (boardData) => {
     setIsLoading(true)
 
-    const createPromise = createBoard(boardData)
+    const promise = isEditing
+      ? updateBoard(currentBoard.id, boardData)
+      : createBoard(boardData)
 
     await toast
-      .promise(createPromise, {
+      .promise(promise, {
         pending: "Saving your board",
         success: "Board saved!",
         error: "An error has occured",
@@ -124,6 +152,8 @@ const Form = () => {
       .finally(() => setIsLoading(false))
 
     boardFormState.closeForm()
+
+    setCurrentBoard(null)
 
     // refresh
     router.refresh()
@@ -135,9 +165,9 @@ const Form = () => {
       onSubmit={handleSubmit(onSubmit, onError)}
     >
       <SheetHeader>
-        <SheetTitle>Create Board</SheetTitle>
+        <SheetTitle>{formTitle}</SheetTitle>
         <SheetDescription>
-          Create a new board by filling up the form below
+          Fill up the form below. Save the changes once done.
         </SheetDescription>
       </SheetHeader>
       <div className="space-y-4 py-4">
@@ -173,7 +203,7 @@ const Form = () => {
               Add at least 2 columns
             </p>
           </div>
-          {columns.fields.map((column, index) => (
+          {fields.map((column, index) => (
             <div key={column.id} className="grid grid-cols-12 gap-3">
               <div className="col-span-7 space-y-2">
                 <Input
@@ -196,7 +226,10 @@ const Form = () => {
                 name={`columns.${index}.color`}
                 render={({ field }) => (
                   <div className="col-span-4 flex flex-col space-y-2">
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value as string}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger
                         className={cn({
                           "border-red-600":
@@ -255,9 +288,12 @@ const Form = () => {
                 {...register(`columns.${index}.order`)}
               />
               <Button
+                disabled={
+                  isEditing && currentBoard.columns[index]._count.tasks > 0
+                }
                 variant="outline"
                 className="col-span-1 p-0"
-                onClick={() => columns.remove(index)}
+                onClick={() => remove(index)}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -267,7 +303,7 @@ const Form = () => {
         {!hasReachedMaxColumns && (
           <Button
             onClick={() => {
-              columns.append({
+              append({
                 name: "",
                 order: nextOrder,
                 color: "",

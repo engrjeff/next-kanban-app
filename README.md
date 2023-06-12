@@ -1,6 +1,6 @@
-# next-template
+# Kanban App
 
-A Next.js 13 template for building apps with Radix UI and Tailwind CSS.
+A Next.js 13 project.
 
 ## Usage
 

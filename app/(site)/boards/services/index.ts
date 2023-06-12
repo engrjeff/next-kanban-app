@@ -16,6 +16,13 @@ export const createBoard = async (boardData: BoardCreateInput) => {
   return response.data
 }
 
+export const updateBoard = async (id: string, boardData: BoardCreateInput) => {
+  const url = API_ENDPOINTS.BOARDS + `/${id}`
+  const response = await apiClient.put<RawBoard>(url, boardData)
+
+  return response.data
+}
+
 export const deleteBoard = async (id: string) => {
   const url = API_ENDPOINTS.BOARDS + `/${id}`
   const response = await apiClient.delete(url)
@@ -37,8 +44,22 @@ export const getBoards = async () => {
       userId,
     },
     include: {
-      columns: true,
       projects: true,
+      columns: {
+        orderBy: {
+          order: "asc",
+        },
+        include: {
+          _count: {
+            select: {
+              tasks: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   })
 

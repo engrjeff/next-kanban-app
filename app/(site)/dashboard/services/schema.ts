@@ -18,7 +18,7 @@ export const projectCreateSchema = z.object({
     .min(1, { message: "Project description is required" }),
 })
 
-export type ProjectCreateInput = z.infer<typeof projectCreateSchema>
+export const projectUpdateSchema = projectCreateSchema.partial()
 
 export const taskCreateSchema = z.object({
   projectId: z.string({
@@ -40,5 +40,9 @@ export const taskCreateSchema = z.object({
     })
     .min(1, { message: "Task content is required" }),
 })
+
+export type ProjectCreateInput = z.infer<typeof projectCreateSchema>
+
+export type ProjectUpdateInput = z.infer<typeof projectUpdateSchema>
 
 export type TaskCreateInput = z.infer<typeof taskCreateSchema>

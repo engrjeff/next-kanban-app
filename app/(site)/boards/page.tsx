@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 import BoardCard from "./components/BoardCard"
-import CreateBoardForm from "./components/CreateBoardForm"
+import BoardForm from "./components/BoardForm"
 import { getBoards } from "./services"
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ async function BoardsPage() {
           <p className="text-muted-foreground">
             You don&apos;t have any board yet. Create one now.
           </p>
-          <CreateBoardForm />
+          <BoardForm />
         </div>
       </div>
     )
@@ -39,7 +39,7 @@ async function BoardsPage() {
             Boards are templates for your tasks
           </p>
         </div>
-        <CreateBoardForm />
+        <BoardForm />
       </div>
       <ul className="mt-6 grid grid-cols-4 gap-4">
         {boards.map((board) => (

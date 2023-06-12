@@ -61,10 +61,10 @@ model Project {
   name        String
   description String
 
-  board   Board  @relation(fields: [boardId], references: [id])
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
   tasks Task[]
@@ -84,7 +84,7 @@ model Board {
   updatedAt DateTime  @updatedAt
   projects  Project[]
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 }
 
@@ -97,10 +97,10 @@ model Column {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  board   Board?  @relation(fields: [boardId], references: [id])
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String?
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
   tasks  Task[]
 }
@@ -110,15 +110,15 @@ model Task {
   title   String
   content String
 
-  column   Column @relation(fields: [columnId], references: [id])
+  column   Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  project   Project? @relation(fields: [projectId], references: [id])
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String?
 }

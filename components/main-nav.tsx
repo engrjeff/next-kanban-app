@@ -10,7 +10,7 @@ import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 
-import { Button } from "./ui/button"
+import LogoutButton from "./logout-button"
 
 interface MainNavProps {
   items?: NavItem[]
@@ -19,7 +19,7 @@ interface MainNavProps {
 export function MainNav({ items }: MainNavProps) {
   const session = useSession()
 
-  const isAuthenticated = session.status === "authenticated"
+  const isAuthenticated = Boolean(session.data?.user)
   const segment = useSelectedLayoutSegments()
 
   return (
@@ -77,14 +77,7 @@ export function MainNav({ items }: MainNavProps) {
         </nav>
       ) : null}
 
-      <Button
-        variant="secondary"
-        className="ml-auto"
-        size="sm"
-        onClick={() => signOut()}
-      >
-        Log Out
-      </Button>
+      <LogoutButton />
     </div>
   )
 }

@@ -5,13 +5,27 @@ import { API_ENDPOINTS, apiClient } from "@/lib/apiClient"
 import db from "@/lib/db"
 import { getCurrentUser } from "@/lib/session"
 
-import { TaskCreateInput, type ProjectCreateInput } from "./schema"
+import {
+  ProjectUpdateInput,
+  TaskCreateInput,
+  type ProjectCreateInput,
+} from "./schema"
 
 export const createProject = async (projectData: ProjectCreateInput) => {
   const response = await apiClient.post<RawProject>(
     API_ENDPOINTS.PROJECTS,
     projectData
   )
+
+  return response.data
+}
+
+export const updateProject = async (
+  id: string,
+  projectData: ProjectUpdateInput
+) => {
+  const url = API_ENDPOINTS.PROJECTS + `/${id}`
+  const response = await apiClient.put<RawProject>(url, projectData)
 
   return response.data
 }
@@ -28,6 +42,9 @@ export const getProjects = async () => {
   const projects = await db.project.findMany({
     where: {
       userId,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   })
 
@@ -53,7 +70,11 @@ export const getProjectById = async (id: string) => {
     include: {
       board: {
         include: {
-          columns: true,
+          columns: {
+            orderBy: {
+              order: "asc",
+            },
+          },
         },
       },
       tasks: true,

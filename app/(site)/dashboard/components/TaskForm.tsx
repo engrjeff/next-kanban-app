@@ -48,8 +48,16 @@ interface Props {
 function TaskForm({ project }: Props) {
   const taskFormState = useTaskFormToggler()
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      taskFormState.setInitialColumn(null)
+    }
+
+    taskFormState.toggle(isOpen)
+  }
+
   return (
-    <Dialog open={taskFormState.open} onOpenChange={taskFormState.toggle}>
+    <Dialog open={taskFormState.open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           size="sm"
@@ -84,7 +92,7 @@ const Form = ({ project }: Props) => {
       title: "",
       content: "",
       projectId: project.id,
-      columnId: project.board.columns[0].id,
+      columnId: taskFormState.initialColumn ?? project.board.columns[0].id,
     },
   })
 

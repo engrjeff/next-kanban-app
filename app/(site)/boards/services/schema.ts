@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 export const columnCreateSchema = z.object({
+  id: z.string().optional(),
   name: z
     .string({
       required_error: "Column name is required",

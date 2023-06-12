@@ -6,6 +6,8 @@ import { Edit, MoreHorizontal, Trash } from "lucide-react"
 import { toast } from "react-toastify"
 
 import { cn } from "@/lib/utils"
+import useBoardFormToggle from "@/hooks/useBoardFormToggler"
+import useCurrentBoard from "@/hooks/useCurrentBoard"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,9 +41,18 @@ import { deleteBoard, type Board } from "../services"
 function BoardCard({ board }: { board: Board }) {
   const [deleteDialogShown, setDeleteDialogShown] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const openForm = useBoardFormToggle((state) => state.openForm)
+  const setCurrentBoard = useCurrentBoard((state) => state.setCurrentBoard)
   const router = useRouter()
 
   const isDeletable = board.projects.length === 0
+
+  const handleEditClick = () => {
+    setCurrentBoard(board)
+
+    openForm()
+  }
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -75,7 +86,7 @@ function BoardCard({ board }: { board: Board }) {
               <DropdownMenuLabel>Menu</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <button className="w-full">
+                <button className="w-full" onClick={handleEditClick}>
                   <Edit className="mr-2 h-4 w-4" />
                   <span>Edit</span>
                 </button>
